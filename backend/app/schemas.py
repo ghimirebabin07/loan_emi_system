@@ -1,14 +1,14 @@
-from pydantic import BaseModel,Field
-from datetime import date 
+from pydantic import BaseModel, Field
+from datetime import date
 from typing import Optional, List
 
 class CustomerCreate(BaseModel):
-    name : str 
-    phone : str
-    address : Optional[str] = None 
+    name: str
+    phone: str
+    address: Optional[str] = None
 
 class CustomerOut(CustomerCreate):
-    id = int 
+    id: int
 
 class LoanCreate(BaseModel):
     customer_id: int
@@ -29,7 +29,7 @@ class LoanOut(BaseModel):
     interest_rate: float
     tenure_months: int
     start_date: date
-    emis: List[EMIOut] = []
+    emis: List[EMIOut] = Field(default_factory=list)
 
 
 class PaymentCreate(BaseModel):
