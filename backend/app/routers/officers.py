@@ -19,4 +19,4 @@ def create_officer(name:str,branch:str = None, db=Depends(get_db)):
 def list_officers(db=Depends(get_db)):
     cursor = db.cursor()
     cursor.execute("SELECT * FROM loan_officers")
-    return [dict(row) for row in cursor.fetchall()]
+    return [dict(row) for row in cursor.fetchall()] 
