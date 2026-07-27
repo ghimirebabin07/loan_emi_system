@@ -1,0 +1,47 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Loans</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <nav>
+        <a href="../index.html">Dashboard</a>
+        <a href="customers.html">Customers</a>
+        <a href="loans.html">Loans</a>
+        <a href="payments.html">Payments</a>
+    </nav>
+
+    <h1>Create Loan</h1>
+
+    <form id="loanForm">
+        <label>Customer ID <input type="number" id="customer_id" required></label>
+        <label>Officer ID <input type="number" id="officer_id" required></label>
+        <label>Amount <input type="number" id="amount" step="0.01" required></label>
+        <label>Interest Rate % <input type="number" id="interest_rate" step="0.01" required></label>
+        <label>Tenure (months) <input type="number" id="tenure_months" required></label>
+        <button type="submit">Create Loan</button>
+    </form>
+    <div class="error" id="loanFormError"></div>
+
+    <h1>View Loan Schedule</h1>
+    <form id="lookupForm">
+        <label>Loan ID <input type="number" id="lookupId" required></label>
+        <button type="submit">Load Schedule</button>
+    </form>
+
+    <div class="cards" id="loanSummary"></div>
+
+    <table>
+        <thead>
+            <tr><th>EMI ID</th><th>Due Date</th><th>Amount</th><th>Status</th></tr>
+        </thead>
+        <tbody id="emiRows"></tbody>
+    </table>
+
+    <script src="../js/api.js"></script>
+    <script src="../js/loans.js"></script>
+</body>
+</html> 
