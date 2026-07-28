@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Payments</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <nav>
+        <a href="../index.html">Dashboard</a>
+        <a href="customers.html">Customers</a>
+        <a href="loans.html">Loans</a>
+        <a href="payments.html">Payments</a>
+    </nav>
+
+    <h1>Record a Payment</h1>
+
+    <form id="paymentForm">
+        <label>EMI ID <input type="number" id="emi_id" required></label>
+        <label>Amount Paid <input type="number" id="amount_paid" step="0.01" required></label>
+        <label>Payment Mode
+            <select id="payment_mode">
+                <option value="cash">Cash</option>
+                <option value="bank">Bank</option>
+                <option value="mobile wallet">Mobile Wallet</option>
+            </select>
+        </label>
+        <button type="submit">Record Payment</button>
+    </form>
+
+    <div id="paymentResult"></div>
+
+    <script src="../js/api.js"></script>
+    <script src="../js/payments.js"></script>
+</body>
+</html>
