@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Customers</title>
+    <title>Loan Officers</title>
     <link rel="stylesheet" href="../css/style.css">
 </head>
 <body>
@@ -14,24 +14,23 @@
         <a href="payments.html">Payments</a>
     </nav>
 
-    <h1>Customers</h1>
+    <h1>Loan Officers</h1>
 
-    <form id="customerForm">
+    <form id="officerForm">
         <label>Name <input type="text" id="name" required></label>
-        <label>Phone <input type="text" id="phone" required></label>
-        <label>Address <input type="text" id="address"></label>
-        <button type="submit">Add Customer</button>
+        <label>Branch <input type="text" id="branch" required></label>
+        <button type="submit">Add Officer</button>
     </form>
     <div class="error" id="formError"></div>
 
     <table>
         <thead>
-            <tr><th>ID</th><th>Name</th><th>Phone</th><th>Address</th><th>Actions</th></tr>
+            <tr><th>ID</th><th>Name</th><th>Branch</th><th>Actions</th></tr>
         </thead>
-        <tbody id="customerRows"></tbody>
+        <tbody id="officerRows"></tbody>
     </table>
 
     <script src="../js/api.js"></script>
-    <script src="../js/customers.js"></script>
+    <script src="../js/officers.js"></script>
 </body>
-</html>
+</html> 

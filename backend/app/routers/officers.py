@@ -1,25 +1,28 @@
-from fastapi import APIRouter,Depends,HTTPException 
+from fastapi import APIRouter, Depends, HTTPException
+from .. import schemas
 from ..database import get_db
 
-router = APIRouter(prefix="/officers",tags=["Officers"])
+router = APIRouter(prefix="/officers", tags=["Officers"])
 
-@router.post("/")
-def create_officer(name:str,branch:str = None, db=Depends(get_db)):
+
+@router.post("/", response_model=schemas.OfficerOut)
+def create_officer(officer: schemas.OfficerCreate, db=Depends(get_db)):
     cursor = db.cursor()
     cursor.execute(
         "INSERT INTO loan_officers (name,branch) VALUES(?,?)",
-        (name,branch),
+        (officer.name, officer.branch),
     )
     db.commit()
-    cursor.execute("SELECT * FROM loan_officers WHERE id = ?",
-    (cursor.lastrowid,))
+    cursor.execute("SELECT * FROM loan_officers WHERE id = ?", (cursor.lastrowid,))
     return dict(cursor.fetchone())
 
-@router.get("/")
+
+@router.get("/", response_model=list[schemas.OfficerOut])
 def list_officers(db=Depends(get_db)):
     cursor = db.cursor()
     cursor.execute("SELECT * FROM loan_officers")
-    return [dict(row) for row in cursor.fetchall()] 
+    return [dict(row) for row in cursor.fetchall()]
+
 
 @router.delete("/{officer_id}")
 def delete_officer(officer_id: int, db=Depends(get_db)):

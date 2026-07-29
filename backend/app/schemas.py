@@ -37,3 +37,12 @@ class PaymentCreate(BaseModel):
     amount_paid: float = Field(gt=0)
     payment_mode: str
     paid_date: Optional[date] = None
+
+
+class OfficerCreate(BaseModel):
+    name: str
+    branch: Optional[str] = None
+
+
+class OfficerOut(OfficerCreate):
+    id: int
