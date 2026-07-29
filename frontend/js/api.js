@@ -19,12 +19,25 @@ async function apiPost(path, data) {
     return res.json();
 }
 
+async function apiDelete(path) {
+    const res = await fetch(`${BASE_URL}${path}`, { method: "DELETE" });
+    if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.detail || `DELETE ${path} failed: ${res.status}`);
+    }
+    // a successful DELETE often returns no body (204 No Content) — guard against parsing nothing as JSON
+    return res.status === 204 ? null : res.json().catch(() => null);
+}
+
 // ---- Customers ----
 const getCustomers = () => apiGet("/customers/");
 const createCustomer = (data) => apiPost("/customers/", data);
+const deleteCustomer = (id) => apiDelete(`/customers/${id}`);
 
 // ---- Officers ----
 const getOfficers = () => apiGet("/officers/");
+const createOfficer = (data) => apiPost("/officers/", data);
+const deleteOfficer = (id) => apiDelete(`/officers/${id}`);
 
 // ---- Loans ----
 const getLoan = (id) => apiGet(`/loans/${id}`);
