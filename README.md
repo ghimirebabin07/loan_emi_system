@@ -2,94 +2,101 @@
 
 A backend-driven system that digitizes how a bank or micro-finance branch manages customers, loans, EMI (Equated Monthly Installment) schedules, and repayments — replacing manual ledger tracking with a structured, rule-enforced database and a REST API that drives all business logic.
 
+**Live demo:** [loan-emi-system-1.onrender.com](https://loan-emi-system-1.onrender.com/index.html)
+
+> Note: the demo is hosted on Render's free tier, so the first request after inactivity may take 30–60 seconds to wake the server.
+
 ---
 
-## What This Project Actually Is
+## Why This Project
+
+This is a micro project assigned by DBMS course teacher **Dr. Ram Govinda Aryal**. The main goal isn't the finished app itself — it's to actually learn how a database and a backend work together: designing relational tables, enforcing rules at the database level with constraints and foreign keys, and building an API that turns raw data into real business logic (like generating an EMI schedule or calculating a live balance) instead of just doing CRUD.
+
+---
+
+## The Problem
 
 In any lending institution, five things need to be tracked and kept perfectly in sync:
 
-1. **Who the customers are**
-2. **Which staff member (loan officer) handled each loan**
-3. **What loans exist** — amount, interest rate, tenure
-4. **What monthly installments (EMIs) are due**, and when
-5. **What payments have actually been received** against those installments
+1. Who the customers are
+2. Which loan officer handled each loan
+3. What loans exist — amount, interest rate, tenure
+4. What monthly installments (EMIs) are due, and when
+5. What payments have actually been received against those installments
 
-This project models exactly that as a relational database, and wraps it in an API so those records can be created, updated, and queried safely — with the database itself enforcing the rules (no negative loan amounts, no duplicate phone numbers, no invalid EMI statuses) rather than trusting application code to always get it right.
+Doing this manually (spreadsheets, paper ledgers) is error-prone: EMI schedules get miscalculated, overdue status goes unnoticed, and outstanding balances drift out of sync with actual payments.
 
-The core idea it demonstrates: **once a loan is created, the system automatically works out the entire month-by-month repayment plan on its own** — nobody manually calculates or types in 12/24/36 EMI rows. That calculation, and keeping loan status accurate over time (pending → overdue → paid), is the real "brain" of the project.
+This project solves that by modeling the whole workflow as a relational database and exposing it through an API that enforces the rules — no negative loan amounts, no duplicate phone numbers, no invalid EMI statuses — so the data can't get corrupted, whether the request comes from the frontend or somewhere else.
+
+The core idea: **once a loan is created, the system automatically works out the entire month-by-month repayment plan** using the standard reducing-balance EMI formula. Nobody manually types in 12/24/36 EMI rows. Loan status (pending → overdue → paid) and outstanding balance are also never stored as fixed numbers — they're calculated live, every time they're requested, so they're always accurate.
 
 ---
 
 ## Core Features
 
-- **Customer management** — register customers and look them up, with phone numbers enforced as unique so no duplicate customer records can exist.
-
+- **Customer management** — register and look up customers, with phone numbers enforced as unique.
 - **Loan officer management** — track which staff member is responsible for which loans, by branch.
-
-- **Automated loan creation with EMI generation** — when a new loan is created (principal, interest rate, tenure), the system:
-  - calculates the exact monthly installment using the standard reducing-balance EMI formula (the same formula real banks use)
-  - automatically generates the full repayment schedule, one row per month, with correct due dates
-  - links every installment back to the loan and the customer
-
-- **Live loan status tracking** — nothing is manually marked "overdue." Every time a loan is viewed, the system checks each pending installment's due date against today's date and updates its status accordingly.
-
-- **Payment recording** — payments are recorded against a specific EMI row, with safeguards so an already fully-paid installment can't be paid again, and partial payments are recognized distinctly from full payments.
-
-- **Outstanding balance calculation** — the amount a customer still owes on a loan is never stored as a fixed number; it's calculated live by subtracting everything actually paid from the original loan amount, so it's always accurate.
-
-- **Branch/portfolio dashboard** — a single summary view showing total active loans, total overdue installments, and total outstanding amount across the entire system — the kind of report a branch manager would actually want.
-
-- **Data integrity enforced at the database level, not just in code** — every table has a primary key, related tables are linked with foreign keys, and constraints (`NOT NULL`, `UNIQUE`, `CHECK`) physically block bad data (like a zero-amount loan or an invalid status) from ever being saved, regardless of what the application code does.
-
-- **Safe deletion behavior** — deleting a loan automatically removes its dependent EMI rows too, instead of leaving orphaned records that point to something that no longer exists.
+- **Automated loan creation with EMI generation** — creating a loan calculates the monthly installment and generates the full repayment schedule with correct due dates, automatically.
+- **Live loan status tracking** — pending installments are checked against today's date and marked overdue on the fly, not manually.
+- **Payment recording** — payments are matched to a specific EMI, with safeguards against double-paying an already-settled installment, and partial payments handled distinctly from full payments.
+- **Live outstanding balance calculation** — worked out as loan amount minus everything actually paid, every time it's requested.
+- **Branch/portfolio dashboard** — a single summary view: total active loans, total overdue installments, total outstanding amount.
+- **Database-level data integrity** — primary keys, foreign keys, and constraints (`NOT NULL`, `UNIQUE`, `CHECK`) physically block bad data, regardless of what the application code does.
+- **Safe deletion behavior** — deleting a loan cascades to remove its dependent EMI rows instead of leaving orphaned records.
 
 ---
 
-## How It Works, Conceptually
-
-1. A **customer** and a **loan officer** are registered first — every loan must belong to exactly one of each.
-2. A **loan** is created against that customer/officer pair, with an amount, interest rate, and tenure (in months).
-3. The moment that loan is saved, the **EMI calculation engine** runs:
-   - converts the yearly interest rate into a monthly rate
-   - applies the reducing-balance EMI formula to get one fixed monthly installment amount
-   - generates that installment across the correct number of future months, one month apart
-4. Those installments are stored as an **EMI schedule**, each one initially marked `pending`.
-5. As real-world time passes, any `pending` installment whose due date has passed gets recalculated as `overdue` whenever the loan is looked up — this is intentionally never a permanently stored flag, since "overdue" depends entirely on the current date.
-6. When a **payment** comes in, it's matched to a specific installment. If the amount covers it fully, that installment becomes `paid`; if not, it's marked `partially_paid`.
-7. At any point, the **outstanding balance** for a loan is worked out live: total loan amount minus everything actually paid so far.
-8. The **dashboard** aggregates all of this across every loan in the system, to give a single "health of the portfolio" snapshot.
-
-The relationships form a clear hierarchy:
-
-```
-Customer ──< Loan >── Loan Officer
-                │
-                ▼
-          EMI Schedule ──< Payment
-```
-
-(One customer can have many loans. One loan has many EMI installments. Each installment can have at most one payment.)
-
----
-
-## Technologies Used
+## Technology Used
 
 | Layer | Technology | Role |
 |---|---|---|
-| **Backend framework** | FastAPI (Python) | Exposes the system's logic as REST API endpoints; handles request validation automatically |
-| **Database** | SQLite | Stores all data in a single file — no separate database server needed, ideal for this scale of project |
-| **ORM** | SQLAlchemy | Maps Python classes to database tables, so table creation and queries are written as Python instead of raw SQL |
-| **Data validation** | Pydantic | Defines and enforces the exact shape of data allowed in and out of each API endpoint, independent of the database structure |
-| **Date handling** | python-dateutil | Correctly calculates monthly due dates (e.g., "add 1 month") across different month lengths |
-| **API server** | Uvicorn | Runs the FastAPI application and handles incoming requests |
-| **Frontend** | HTML, CSS, JavaScript (vanilla) | A lightweight interface that calls the API to display and interact with customers, loans, payments, and the dashboard |
-| **SQL** | Raw SQL script | A separate, hand-written script demonstrating table creation, constraints, and queries directly — independent of the ORM, used to show the underlying database design explicitly |
+| Backend framework | FastAPI (Python) | Exposes the system's logic as REST API endpoints; handles request validation automatically |
+| Database | SQLite | Stores all data in a single file — no separate database server needed |
+| ORM | SQLAlchemy | Maps Python classes to database tables |
+| Data validation | Pydantic | Enforces the exact shape of data allowed in and out of each API endpoint |
+| Date handling | python-dateutil | Correctly calculates monthly due dates across different month lengths |
+| API server | Uvicorn | Runs the FastAPI application |
+| Frontend | HTML, CSS, JavaScript (vanilla) | Lightweight interface that calls the API to display and interact with customers, loans, payments, and the dashboard |
+| SQL | Raw SQL script | A hand-written script demonstrating table creation, constraints, and queries independently of the ORM |
+| Deployment | Render | Hosts the live demo |
 
 ---
 
-## Why It's Built This Way
+## Running It Locally
 
-- **FastAPI + SQLAlchemy** is used because it mirrors how real backend systems are actually built in industry — business logic in Python, but with a real relational database underneath enforcing structural rules, not just application-level checks.
-- **SQLite** is chosen deliberately for scale and simplicity — the concepts (foreign keys, constraints, joins) are identical to what a larger database (PostgreSQL, MySQL) would use, but with zero setup overhead.
-- **Live-calculated fields** (overdue status, outstanding balance) reflect how real financial systems behave — those values change with time and payments, so storing them as fixed numbers would make the data go stale and unreliable.
-- **A separate raw SQL script** exists alongside the ORM-driven app specifically to show that the underlying relational design — and not just the Python code — is understood, since it's easy to build something that "works" through an ORM without actually knowing what's happening at the database level.
+**1. Clone the repository**
+```bash
+git clone <your-repo-url>
+cd <repo-folder>
+```
+
+**2. Set up the backend**
+```bash
+cd backend
+python -m venv venv
+source venv/bin/activate      # on Windows: venv\Scripts\activate
+pip install -r requirements.txt
+```
+
+**3. Start the backend server**
+```bash
+uvicorn app.main:app --reload
+```
+The API will be running at `http://127.0.0.1:8000`, with interactive docs at `http://127.0.0.1:8000/docs`.
+
+**4. Run the frontend**
+
+The frontend is plain HTML/CSS/JS, so it doesn't need a build step. Open `frontend/index.html` directly in your browser, or — if your browser blocks `fetch()` from a `file://` page — serve it locally:
+```bash
+cd frontend
+python -m http.server 5500
+```
+Then visit `http://127.0.0.1:5500`.
+
+**Test it in this order:**
+1. Dashboard loads with all zeros on an empty database
+2. Add a loan officer
+3. Add a customer
+4. Create a loan → confirm the EMI schedule fills in automatically
+5. Record a payment against one EMI → confirm its status updates to "paid"
+6. Refresh the dashboard → confirm the totals reflect what you just did
