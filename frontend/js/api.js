@@ -1,4 +1,4 @@
-const BASE_URL = "http://127.0.0.1:8002";
+const BASE_URL = "https://loan-emi-system.onrender.com";
 
 async function apiGet(path) {
     const res = await fetch(`${BASE_URL}${path}`);
