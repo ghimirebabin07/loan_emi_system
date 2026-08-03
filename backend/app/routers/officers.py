@@ -32,18 +32,13 @@ def delete_officer(officer_id: int, db=Depends(get_db)):
     if not cursor.fetchone():
         raise HTTPException(404, "Officer not found")
 
-    # block deletion if the officer still has a customer mid-loan
     cursor.execute(
-        """SELECT COUNT(*) AS pending
-           FROM loans l
-           JOIN emi_schedule e ON e.loan_id = l.id
-           WHERE l.officer_id = ? AND e.status != 'paid'""",
+        "SELECT COUNT(*) AS total FROM loans WHERE officer_id = ?",
         (officer_id,),
     )
-    if cursor.fetchone()["pending"] > 0:
-        raise HTTPException(400, "Cannot delete: officer still has an active/unpaid loan under them")
+    if cursor.fetchone()["total"] > 0:
+        raise HTTPException(400, "Cannot delete: officer has loan history that must remain permanent")
 
-    cursor.execute("UPDATE loans SET officer_id = NULL WHERE officer_id = ?", (officer_id,))
     cursor.execute("DELETE FROM loan_officers WHERE id = ?", (officer_id,))
     db.commit()
 

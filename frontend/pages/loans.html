@@ -11,14 +11,19 @@
         <a href="customers.html">Customers</a>
         <a href="officers.html">Officers</a>
         <a href="loans.html">Loans</a>
+        <a href="loans-list.html">All Loans</a>
         <a href="payments.html">Payments</a>
     </nav>
 
     <h1>Create Loan</h1>
 
     <form id="loanForm">
-        <label>Customer ID <input type="number" id="customer_id" required></label>
-        <label>Officer ID <input type="number" id="officer_id" required></label>
+        <label>Customer
+            <select id="customer_id" required></select>
+        </label>
+        <label>Officer
+            <select id="officer_id" required></select>
+        </label>
         <label>Amount <input type="number" id="amount" step="0.01" required></label>
         <label>Interest Rate % <input type="number" id="interest_rate" step="0.01" required></label>
         <label>Tenure (months) <input type="number" id="tenure_months" required></label>
@@ -26,6 +31,19 @@
     </form>
     <div class="error" id="loanFormError"></div>
     <div id="loanFormMessage"></div>
+
+    <section class="panel">
+        <div class="panel-head">
+            <h2>Selected Customer History</h2>
+            <div class="panel-state" id="customerHistoryState">Select a customer to view loan history.</div>
+        </div>
+        <table>
+            <thead>
+                <tr><th>Loan ID</th><th>Amount</th><th>Status</th><th>Start Date</th><th>Officer</th></tr>
+            </thead>
+            <tbody id="customerHistoryRows"></tbody>
+        </table>
+    </section>
 
     <h1>View Loan Schedule</h1>
     <form id="lookupForm">

@@ -21,4 +21,35 @@ async function loadSummary() {
     }
 }
 
-loadSummary(); 
+async function loadCompletedLoans() {
+    const rows = document.getElementById("completedLoanRows");
+    const state = document.getElementById("completedLoanState");
+
+    if (!rows || !state) return;
+
+    try {
+        const loans = await getLoans({ status: "completed" });
+        if (!loans.length) {
+            rows.innerHTML = "";
+            state.textContent = "No completed loans yet.";
+            return;
+        }
+
+        state.textContent = "";
+        rows.innerHTML = loans.map((loan) => `
+            <tr>
+                <td><a class="inline-link" href="pages/loans.html?loan_id=${loan.id}">${loan.id}</a></td>
+                <td>${loan.customer_name}</td>
+                <td>${loan.officer_name || "—"}</td>
+                <td>${loan.amount}</td>
+                <td><span class="status ${loan.status}">${loan.status}</span></td>
+                <td>${loan.start_date}</td>
+            </tr>
+        `).join("");
+    } catch (err) {
+        state.textContent = err.message;
+    }
+}
+
+loadSummary();
+loadCompletedLoans();

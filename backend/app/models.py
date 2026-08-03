@@ -25,6 +25,8 @@ def create_tables(conn):
             interest_rate REAL NOT NULL CHECK (interest_rate > 0),
             tenure_months INTEGER NOT NULL CHECK (tenure_months > 0),
             start_date TEXT NOT NULL,
+            status TEXT NOT NULL DEFAULT 'active'
+                CHECK (status IN ('active', 'completed')),
             customer_id INTEGER,
             officer_id INTEGER,
             FOREIGN KEY (customer_id) REFERENCES customers(id),
@@ -54,5 +56,13 @@ def create_tables(conn):
             FOREIGN KEY (emi_id) REFERENCES emi_schedule(id)
         )
     """)
+
+    cursor.execute("PRAGMA table_info(loans)")
+    loan_columns = {row[1] for row in cursor.fetchall()}
+    if 'status' not in loan_columns:
+        cursor.execute("ALTER TABLE loans ADD COLUMN status TEXT NOT NULL DEFAULT 'active'")
+        cursor.execute("UPDATE loans SET status = 'active' WHERE status IS NULL OR status = ''")
+
+    cursor.execute("UPDATE loans SET status = 'active' WHERE status IS NULL")
 
     conn.commit()

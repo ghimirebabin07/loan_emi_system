@@ -11,6 +11,7 @@
         <a href="pages/customers.html">Customers</a>
         <a href="pages/officers.html">Officers</a>
         <a href="pages/loans.html">Loans</a>
+        <a href="pages/loans-list.html">All Loans</a>
         <a href="pages/payments.html">Payments</a>
     </nav>
 
@@ -19,6 +20,20 @@
     <div class="cards" id="summaryCards">
         <div class="card"><div class="label">Loading...</div></div>
     </div>
+
+    <section class="panel">
+        <div class="panel-head">
+            <h2>Loan History</h2>
+            <a class="inline-link" href="pages/loans-list.html?status=completed">Open all completed loans</a>
+        </div>
+        <div class="panel-state" id="completedLoanState"></div>
+        <table>
+            <thead>
+                <tr><th>Loan ID</th><th>Customer</th><th>Officer</th><th>Amount</th><th>Status</th><th>Start Date</th></tr>
+            </thead>
+            <tbody id="completedLoanRows"></tbody>
+        </table>
+    </section>
 
     <script src="js/api.js"></script>
     <script src="js/dashboard.js"></script>

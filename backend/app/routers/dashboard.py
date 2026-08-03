@@ -10,28 +10,37 @@ def dashboard_summary(db=Depends(get_db)):
     cursor = db.cursor()
     today = date.today().isoformat()
 
-    cursor.execute("SELECT COUNT(*) AS total FROM loans")
+    cursor.execute("SELECT COUNT(*) AS total FROM loans WHERE status = 'active'")
     total_loans = cursor.fetchone()["total"]
 
     cursor.execute(
-        "UPDATE emi_schedule SET status = 'overdue' WHERE status = 'pending' AND due_date < ?",
+        """UPDATE emi_schedule
+           SET status = 'overdue'
+           WHERE status = 'pending'
+             AND due_date < ?
+             AND loan_id IN (SELECT id FROM loans WHERE status = 'active')""",
         (today,),
     )
     db.commit()
 
-    cursor.execute("SELECT COUNT(*) AS total FROM emi_schedule WHERE status = 'overdue'")
+    cursor.execute(
+        """SELECT COUNT(*) AS total
+           FROM emi_schedule e
+           JOIN loans l ON l.id = e.loan_id
+           WHERE l.status = 'active' AND e.status = 'overdue'"""
+    )
     overdue_count = cursor.fetchone()["total"]
 
-    cursor.execute("SELECT COALESCE(SUM(amount_paid), 0) AS total FROM payments")
-    total_paid = cursor.fetchone()["total"]
-
-    cursor.execute("SELECT COALESCE(SUM(amount), 0) AS total FROM loans")
-    total_loan_amount = cursor.fetchone()["total"]
-
-    total_outstanding = total_loan_amount - total_paid
+    cursor.execute(
+        """SELECT COALESCE(SUM(e.emi_amount), 0) AS total
+           FROM emi_schedule e
+           JOIN loans l ON l.id = e.loan_id
+           WHERE l.status = 'active' AND e.status != 'paid'"""
+    )
+    total_outstanding = cursor.fetchone()["total"]
 
     return {
         "total_active_loans": total_loans,
         "total_overdue_emis": overdue_count,
-        "total_outstanding_amount": round(total_outstanding, 2),
+        "total_outstanding_amount": round(max(total_outstanding, 0), 2),
     }

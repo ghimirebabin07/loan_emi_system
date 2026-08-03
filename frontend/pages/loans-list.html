@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>All Loans</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <nav>
+        <a href="../index.html">Dashboard</a>
+        <a href="customers.html">Customers</a>
+        <a href="officers.html">Officers</a>
+        <a href="loans.html">Loans</a>
+        <a href="loans-list.html">All Loans</a>
+        <a href="payments.html">Payments</a>
+    </nav>
+
+    <h1>All Loans</h1>
+    <p class="muted">Completed loans remain here permanently as history. Use the filter to switch between all, active, and completed loans.</p>
+
+    <div class="segmented" id="loanFilters">
+        <button type="button" data-status="all" class="active">All</button>
+        <button type="button" data-status="active">Active</button>
+        <button type="button" data-status="completed">Completed</button>
+    </div>
+
+    <div class="panel-state" id="loanListState">Loading loans...</div>
+
+    <table>
+        <thead>
+            <tr><th>Loan ID</th><th>Customer</th><th>Officer</th><th>Amount</th><th>Status</th><th>Start Date</th></tr>
+        </thead>
+        <tbody id="loanListRows"></tbody>
+    </table>
+
+    <script src="../js/api.js"></script>
+    <script src="../js/loans_list.js"></script>
+</body>
+</html>

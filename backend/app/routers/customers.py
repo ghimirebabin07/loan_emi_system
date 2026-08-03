@@ -25,6 +25,31 @@ def list_customers(db=Depends(get_db)):
     rows = cursor.fetchall()
     return [dict(row) for row in rows]
 
+
+@router.get("/{customer_id}/loans", response_model=list[schemas.LoanListOut])
+def customer_loan_history(customer_id: int, db=Depends(get_db)):
+    cursor = db.cursor()
+    cursor.execute("SELECT id FROM customers WHERE id = ?", (customer_id,))
+    if not cursor.fetchone():
+        raise HTTPException(404, "Customer not found")
+
+    cursor.execute(
+        """SELECT
+               l.id,
+               c.name AS customer_name,
+               o.name AS officer_name,
+               l.amount,
+               l.status,
+               l.start_date
+           FROM loans l
+           JOIN customers c ON c.id = l.customer_id
+           LEFT JOIN loan_officers o ON o.id = l.officer_id
+           WHERE l.customer_id = ?
+           ORDER BY l.id DESC""",
+        (customer_id,),
+    )
+    return [dict(row) for row in cursor.fetchall()]
+
 @router.delete("/{customer_id}")
 def delete_customer(customer_id: int, db=Depends(get_db)):
     cursor = db.cursor()
@@ -33,30 +58,14 @@ def delete_customer(customer_id: int, db=Depends(get_db)):
     if not cursor.fetchone():
         raise HTTPException(404, "Customer not found")
 
-    # block deletion if any of this customer's loans still has an unpaid EMI
     cursor.execute(
-        """SELECT COUNT(*) AS pending
-           FROM loans l
-           JOIN emi_schedule e ON e.loan_id = l.id
-           WHERE l.customer_id = ? AND e.status != 'paid'""",
+        "SELECT COUNT(*) AS total FROM loans WHERE customer_id = ?",
         (customer_id,),
     )
-    if cursor.fetchone()["pending"] > 0:
-        raise HTTPException(400, "Cannot delete: customer still has an active/unpaid loan")
-
-    # all loans are fully paid — safe to clean up, child rows first
-    cursor.execute("SELECT id FROM loans WHERE customer_id = ?", (customer_id,))
-    loan_ids = [row["id"] for row in cursor.fetchall()]
-
-    for loan_id in loan_ids:
-        cursor.execute(
-            "DELETE FROM payments WHERE emi_id IN (SELECT id FROM emi_schedule WHERE loan_id = ?)",
-            (loan_id,),
-        )
-        cursor.execute("DELETE FROM emi_schedule WHERE loan_id = ?", (loan_id,))
-        cursor.execute("DELETE FROM loans WHERE id = ?", (loan_id,))
+    if cursor.fetchone()["total"] > 0:
+        raise HTTPException(400, "Cannot delete: customer has loan history that must remain permanent")
 
     cursor.execute("DELETE FROM customers WHERE id = ?", (customer_id,))
     db.commit()
 
-    return {"message": f"Customer {customer_id} deleted along with their completed loan history"}
+    return {"message": f"Customer {customer_id} deleted"}
