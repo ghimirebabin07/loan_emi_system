@@ -41,8 +41,15 @@ const deleteOfficer = (id) => apiDelete(`/officers/${id}`);
 
 // ---- Loans ----
 const getLoan = (id) => apiGet(`/loans/${id}`);
+const getLoans = (params = {}) => {
+    const query = new URLSearchParams();
+    if (params.status) query.set("status", params.status);
+    const suffix = query.toString() ? `?${query.toString()}` : "";
+    return apiGet(`/loans/${suffix}`);
+};
 const createLoan = (data) => apiPost("/loans/", data);
 const getBalance = (id) => apiGet(`/loans/${id}/balance`);
+const getCustomerLoanHistory = (customerId) => apiGet(`/customers/${customerId}/loans`);
 
 // ---- Payments ----
 const recordPayment = (data) => apiPost("/payments/", data);

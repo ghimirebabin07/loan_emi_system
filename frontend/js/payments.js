@@ -12,10 +12,16 @@ document.getElementById("paymentForm").addEventListener("submit", async (e) => {
     try {
         const result = await recordPayment(data);
         e.target.reset();
+        const message = result.message || "Payment recorded.";
+        const scheduleLink = result.loan_id
+            ? `<a class="inline-link" href="loans.html?loan_id=${result.loan_id}">View updated loan schedule</a>`
+            : "";
         resultBox.innerHTML = `
             <div class="card">
-                <div class="label">Payment recorded for EMI #${result.emi_id}</div>
-                <div class="value"><span class="status ${result.status}">${result.status.replace("_", " ")}</span></div>
+                <div class="label">${message}</div>
+                <div class="value">EMI #${result.emi_id ?? ""}</div>
+                <div class="meta">Loan #${result.loan_id ?? ""}${result.loan_status ? ` · ${result.loan_status}` : ""}</div>
+                ${scheduleLink}
             </div>
         `;
     } catch (err) {

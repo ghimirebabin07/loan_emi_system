@@ -29,7 +29,17 @@ class LoanOut(BaseModel):
     interest_rate: float
     tenure_months: int
     start_date: date
+    status: str
     emis: List[EMIOut] = Field(default_factory=list)
+
+
+class LoanListOut(BaseModel):
+    id: int
+    customer_name: str
+    officer_name: str | None = None
+    amount: float
+    status: str
+    start_date: date
 
 
 class PaymentCreate(BaseModel):
